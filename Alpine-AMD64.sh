@@ -19,7 +19,7 @@ if [ "$first" != 1 ];then
 			archurl="amd64";
 			wget https://github.com/AllPlatform/Termux-UbuntuX86_64/raw/master/arm/qemu-x86_64-static;
 			chmod 777 qemu-x86_64-static;
-			mv qemu-i386-static ~/../usr/bin/ ;;
+			mv qemu-x86_64-static ~/../usr/bin/ ;;
 		amd64)
 			archurl="amd64" ;;
 		x86_64)
