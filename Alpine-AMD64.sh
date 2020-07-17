@@ -52,7 +52,7 @@ unset LD_PRELOAD
 command="proot"
 command+=" --link2symlink"
 command+=" -0"
-command+=" -r $folder -q qemu-i386-static"
+command+=" -r $folder -q qemu-x86_64-static"
 if [ -n "\$(ls -A alpine-binds)" ]; then
     for f in alpine-binds/* ;do
       . \$f
