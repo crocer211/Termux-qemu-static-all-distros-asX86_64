@@ -1,0 +1,1 @@
+apt update && apt upgrade && apt install lxde tigervnc-standalone-server
