@@ -80,9 +80,39 @@ echo "making $bin executable"
 chmod +x $bin
 echo "removing image for some space"
 rm $tarball
-echo "You can now launch Ubuntu with the ./${bin} script"
-./start-ubuntu.sh
-#DE installation addition
-wget https://raw.githubusercontent.com/crocer211/Termux-qemu-static-all-distros-asX86_64/master/Desktop/xfce4%20desktop.sh
-bash xfce4 desktop.sh
+echo "You can now launch Ubutu with the /$bin script
+wget --tries=20 $dlink/XFCE4/xfce4_de.sh -O $folder/root/xfce4_de.sh
+clear
+echo "Setting up the installation of XFCE VNC"
+
+echo "APT::Acquire::Retries \"3\";" > $folder/etc/apt/apt.conf.d/80-retries #Setting APT retry count
 echo "#!/bin/bash
+apt update -y && apt install wget sudo -y
+clear
+if [ ! -f /root/lxde_de.sh ]; then
+    wget --tries=20 $dlink/XFCE4/xfce4_de.sh -O /root/xfce4_de.sh
+    bash ~/xfce4_de.sh
+else
+    bash ~/xfce4_de.sh
+fi
+clear
+if [ ! -f /usr/local/bin/vncserver-start ]; then
+    wget --tries=20  $dlink/LXDE/vncserver-start -O /usr/local/bin/vncserver-start
+    wget --tries=20 $dlink/LXDE/vncserver-stop -O /usr/local/bin/vncserver-stop
+    chmod +x /usr/local/bin/vncserver-stop
+    chmod +x /usr/local/bin/vncserver-start
+fi
+if [ ! -f /usr/bin/vncserver ]; then
+    apt install tigervnc-standalone-server -y
+fi
+clear 
+echo 'Installing browser'
+apt install firefox-esr -y
+clear 
+echo 'Welcome to Andronix | Kali'
+rm -rf ~/.bash_profile" > $folder/root/.bash_profile 
+ 
+bash $bin
+
+
+
