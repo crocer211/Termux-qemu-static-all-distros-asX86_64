@@ -1,0 +1,1 @@
+apt update && apt upgrade && apt install xfce4 tigervnc-standalone-server
