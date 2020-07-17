@@ -1,4 +1,5 @@
-# Termux-UbuntuX86_64
+#Termux-qemu-static-all-distros-as X86_64
+
 Resources Provided By
 https://github.com/EXALAB
 
