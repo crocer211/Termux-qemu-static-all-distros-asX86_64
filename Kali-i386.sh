@@ -41,7 +41,7 @@ if [ "$first" != 1 ];then
 	cd "$cur"
 fi
 mkdir -p kali-binds
-bin=start-ubuntu.sh
+bin=star-kali.sh
 echo "writing launch script"
 cat > $bin <<- EOM
 #!/bin/bash
