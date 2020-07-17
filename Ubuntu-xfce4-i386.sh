@@ -81,6 +81,7 @@ chmod +x $bin
 echo "removing image for some space"
 rm $tarball
 echo "You can now launch Ubuntu with the ./${bin} script"
+./start-ubuntu.sh
 #DE installation addition
 wget https://raw.githubusercontent.com/crocer211/Termux-qemu-static-all-distros-asX86_64/master/Desktop/xfce4%20desktop.sh
 bash xfce4 desktop.sh
