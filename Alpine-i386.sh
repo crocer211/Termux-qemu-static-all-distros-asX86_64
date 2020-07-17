@@ -87,4 +87,4 @@ echo "making $bin executable"
 chmod +x $bin
 echo "removing image for some space"
 rm $tarball
-echo "You can now launch Debian with the ./${bin} script"
+echo "You can now launch Alpine with the ./${bin} script"
