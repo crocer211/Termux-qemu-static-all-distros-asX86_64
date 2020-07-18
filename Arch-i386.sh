@@ -31,7 +31,8 @@ if [ "$first" != 1 ];then
 		*)
 			echo "unknown architecture"; exit 1 ;;
 		esac
-		wget "https://mirrors.acm.wpi.edu/archlinux/iso/2020.07.01/archlinux-bootstrap-2020.07.01-x86_64.tar.gz" -O $tarball
+		wget "http://mirrors.evowise.com/archlinux/iso/2019.07.01/archlinux-bootstrap-2019.07.01-{archurl}.tar.gz" -O $tarball
+	
 	fi
 	cur=`pwd`
 	mkdir -p "$folder"
