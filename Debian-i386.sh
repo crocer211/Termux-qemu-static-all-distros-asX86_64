@@ -1,6 +1,6 @@
 #!/data/data/com.termux/files/usr/bin/bash
 pkg install proot -y
-folder=Debian-fs
+folder=debian-fs
 if [ -d "$folder" ]; then
 	first=1
 	echo "skipping downloading"
