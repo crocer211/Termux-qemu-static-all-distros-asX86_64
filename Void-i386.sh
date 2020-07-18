@@ -42,7 +42,7 @@ if [ "$first" != 1 ];then
 	cd "$cur"
 fi
 mkdir -p void-binds
-bin=start-alpine.sh
+bin=start-void.sh
 echo "writing launch script"
 cat > $bin <<- EOM
 #!/bin/bash
