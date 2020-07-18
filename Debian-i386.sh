@@ -5,7 +5,7 @@ if [ -d "$folder" ]; then
 	first=1
 	echo "skipping downloading"
 fi
-tarball="ubuntu-rootfs.tar.xz"
+tarball="debian-rootfs.tar.xz"
 if [ "$first" != 1 ];then
 	if [ ! -f $tarball ]; then
 		echo "Download Rootfs, this may take a while base on your internet speed."
