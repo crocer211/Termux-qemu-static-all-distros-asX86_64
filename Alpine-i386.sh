@@ -88,8 +88,8 @@ chmod +x $bin
 echo "removing image for some space"
 rm $tarball
 echo "You can now launch Alpine with the ./${bin} script"
-echo 'nameserver 1.1.1.1" > alpine-fs/etc/resolv.conf
-echo 'nameserver 8.8.8.8" > alpine-fs/etc/resolv.conf
+echo "nameserver 1.1.1.1" > alpine-fs/etc/resolv.conf
+echo "nameserver 8.8.8.8" > alpine-fs/etc/resolv.conf
  
 
  
