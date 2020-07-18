@@ -31,7 +31,7 @@ if [ "$first" != 1 ];then
 		*)
 			echo "unknown architecture"; exit 1 ;;
 		esac
-		wget http://tinycorelinux.net/5.x/x86/release/src/udev-174.tar.xz" -O $tarball	
+		wget "http://tinycorelinux.net/5.x/x86/release/src/udev-174.tar.xz" -O $tarball	
 	fi
 	cur=`pwd`
 	mkdir -p "$folder"
