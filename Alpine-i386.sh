@@ -31,7 +31,7 @@ if [ "$first" != 1 ];then
 		*)
 			echo "unknown architecture"; exit 1 ;;
 		esac
-	 wget "https://raw.githubusercontent.com/EXALAB/AnLinux-Resources/master/Rootfs/Alpine/${archurl}/alpine-minirootfs-3.12.0-${archurl}.tar.gz" -O $tarball
+	 wget "https://github.com/crocer211/Termux-qemu-static-all-distros-asX86_64/blob/master/Roofts/alpine-minirootfs-3.12.0-x86.tar.gz" -O $tarball
 	
 	fi
 	cur=`pwd`
