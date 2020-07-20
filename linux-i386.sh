@@ -1,11 +1,11 @@
 #!/data/data/com.termux/files/usr/bin/bash
 pkg install proot -y
-folder=alpine-fs
+folder=l-fs
 if [ -d "$folder" ]; then
 	first=1
 	echo "skipping downloading"
 fi
-tarball="alpime-roofts.tar.gz"
+tarball="l-roofts.tar.gz"
 if [ "$first" != 1 ];then
 	if [ ! -f $tarball ]; then
 		echo "Download Rootfs, this may take a while base on your internet speed."
@@ -41,8 +41,8 @@ if [ "$first" != 1 ];then
 	proot --link2symlink tar -zxf ${cur}/${tarball} --exclude='dev' 2> /dev/null||:
 	cd "$cur"
 fi
-mkdir -p alpine-binds
-bin=start-alpine.sh
+mkdir -p l-binds
+bin=start-l.sh
 echo "writing launch script"
 cat > $bin <<- EOM
 #!/bin/bash
@@ -53,14 +53,14 @@ command="proot"
 command+=" --link2symlink"
 command+=" -0"
 command+=" -r $folder -q qemu-i386-static"
-if [ -n "\$(ls -A alpine-binds)" ]; then
-    for f in alpine-binds/* ;do
+if [ -n "\$(ls -A l-binds)" ]; then
+    for f in l-binds/* ;do
       . \$f
     done
 fi
 command+=" -b /dev"
 command+=" -b /proc"
-command+=" -b alpine-fs/root:/dev/shm"
+command+=" -b l-fs/root:/dev/shm"
 ## uncomment the following line to have access to the home directory of termux
 #command+=" -b /data/data/com.termux/files/home:/root"
 ## uncomment the following line to mount /sdcard directly to / 
@@ -87,7 +87,7 @@ echo "making $bin executable"
 chmod +x $bin
 echo "removing image for some space"
 rm $tarball
-echo "You can now launch Alpine with the ./${bin} script"
+echo "You can now launch l with the ./${bin} script"
 echo  'nameserver 1.1.1.1 > ./alpine-fs/etc/resolv.conf
 echo  'nameserver 8.8.8.8 > ./alpine-fs/etc/resolv.conf
  
