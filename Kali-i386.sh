@@ -17,7 +17,7 @@ if [ "$first" != 1 ];then
 			mv qemu-i386-static ~/../usr/bin ;;
 		arm)
 			archurl="i386";
-			wget https://github.com/crocer211/Termux-qemu-static-all-distros-asX86_64/blob/patch-1/arm/qemu-i386-static;
+			wget https://github.com/crocer211/Termux-qemu-static-all-distros-asX86_64/raw/patch-1/arm/qemu-i386-static;
 			chmod 777 qemu-i386-static;
 			mv qemu-i386-static ~/../usr/bin/ ;;
 		amd64)
