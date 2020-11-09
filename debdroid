@@ -1,0 +1,353 @@
+#!/data/data/com.termux/files/usr/bin/bash
+### DEBDROID v2.18-R2.
+### Made By WMCB Tech @wmcbtech30
+### This script should not be modified at some cases
+### Dependencies Required
+### proot, tar, wget, dialog, pulseaudio
+###
+### This script uses Andronix Resources as if debootstrap may fail the installation
+set -e -u
+ROOTFS="$PREFIX/share/debdroid/rootfs"
+CONFIG="$PREFIX/share/debdroid/config"
+PATHBASE="/usr/local/bin:/usr/local/sbin:/usr/local/games:/bin:/sbin:/usr/bin:/usr/sbin:/usr/games"
+STATEFUL="$PREFIX/share/debdroid"
+STATUS="$PREFIX/share/debdroid/rootfs/usr/lib/.libdone.so.9"
+
+## Root Detection
+## Running This script as root will fail and mess up permissions
+## And Prevent this script to run inside fakeroot also
+if [[ $EUID -eq 0 ]]; then
+  echo "This script should not be run as ROOT. please use linux deploy instead" 1>&2
+  exit 1
+fi
+
+check-network-connectivity(){
+	if ping -q -c 1 -W 1 8.8.8.8 >/dev/null 2>&1; then
+  		exec
+	else
+  		echo "Cannot connect to network. Try Checking your network connection. Aborting exit code 2"
+		exit 2
+	fi
+}
+
+check-dlcache() {
+	if [ -e $HOME/.cache/dlcache.tar.xz ]; then
+		echo "Existing Image File Found. Skipping Download and Extracting the rootfs"
+		echo "Unpacking The Base System.... This may take a few minutes"
+		proot --link2symlink -0 tar -xvf $HOME/.cache/dlcache.tar.xz --exclude dev -C $ROOTFS
+	else
+		echo "Downloading the Debian Image file....."
+		mkdir -p $HOME/.cache >/dev/null 2>&1 &&
+		wget "https://github.com/WMCB-Tech/AndronixOrigin/raw/master/Rootfs/Debian/${archurl}/debian-rootfs-${archurl}.tar.xz?raw=true" -O $HOME/.cache/dlcache.tar.xz &&
+		echo "Unpacking The Base System.... This may take a few minutes"
+		proot --link2symlink -0 tar -xf $HOME/.cache/dlcache.tar.xz --exclude dev -C $ROOTFS > /dev/null 2>&1
+	fi
+}
+
+show_help(){
+	echo "DebDroid: An Easy to Use Debian Installer for non-rooted devices"
+	echo ""
+	echo "Usage: debdroid [command]"
+	echo ""
+	echo " --install	Installs an Debian Distribution"
+	echo " --uninstall	Uninstalls a Debian Distribution"
+	echo " --reinstall	Reinstalls a Debian Distribution"
+	echo " --launch	Launches Debian Distribution as Regular User"
+	echo " --launch-su	Launches Debian Distribution as Root"
+	echo " --isolated	Launches Debian Distribution without host storage access"
+	echo " --import	Imports the Debian Container Image"
+	echo " --export	Exports the Debian Container Image"
+	echo ""
+	echo "To Pass Command within DebDroid. use the '--' option or '---' if isolated"
+	echo "e.g.:"
+	echo "	debdroid -- sudo apt update"
+	echo "	debdroid -- nano"
+	echo "	debdroid --- sudo apt upgrade"
+	exit 2
+}
+
+install-debian() {
+	if [ -e $STATUS ]; then
+    		echo "An Existing Installation Found. Please Uninstall a Distro First"
+		exit 2
+	else
+    		echo "Preparing to Install a Debian Container."
+	fi
+	### Check Network
+	check-network-connectivity
+	### Check for an Architecture
+	case `dpkg --print-architecture` in
+		aarch64)
+			archurl="arm64" ;;
+		arm)
+			archurl="armhf" ;;
+		amd64)
+			archurl="amd64" ;;
+		x86_64)
+			archurl="amd64" ;;
+		i*86)
+			archurl="i386" ;;
+		x86)
+			archurl="i386" ;;
+		*)
+			echo "unknown architecture"; exit 1 ;;
+	esac
+	check-dlcache
+	echo "Configuring the Base System.. This may take Several Minutes"
+	install $CONFIG/stat $ROOTFS/proc/stat &&
+	install $CONFIG/version $ROOTFS/proc/version &&
+	install $CONFIG/resolv.conf $ROOTFS/etc/resolv.conf &&
+	install $CONFIG/libdone.so.9 $ROOTFS/usr/lib/.libdone.so.9 &&
+	install -m 755 $CONFIG/distro-config.sh $ROOTFS/opt/distro-config.sh &&
+	bash $CONFIG/configure.sh &&
+	echo "Cleaning Up....."
+	echo ""
+	rm -rf $ROOTFS/opt/distro-config.sh &&
+	echo "Debian Container Successfully Installed. To Start type: debdroid --launch"
+	exit 1
+}
+
+uninstall() {
+	echo "WARNING: you are about to uninstall a linux distribution in 10 seconds"
+	echo "to stop hit Ctrl-C before Uninstallation"
+	sleep 10 &&
+	echo "Uninstalling an Linux Distro... "
+	chmod 777 -R $ROOTFS > /dev/null 2>&1 || true
+	rm -rf $STATEFUL/rootfs > /dev/null 2>&1 &&
+	mkdir $STATEFUL/rootfs > /dev/null 2>&1 &&
+	echo "Debian Container Successfully Uninstalled"
+}
+
+launch() {
+	if [ -e $STATUS ]; then
+    		echo ""
+	else
+    		echo "Cannot start Debian Container. Please install it using debdroid --install"
+			exit 2
+	fi
+	unset LD_PRELOAD
+	start-pulseaudio
+	proot --link2symlink --kill-on-exit \
+	-0 -r $ROOTFS -p --sysvipc \
+	-b /dev \
+	-b /proc \
+	-b /sys \
+	-b /dev/urandom:/dev/random \
+	-b /proc/self/fd:/dev/fd \
+	-b /proc/self/fd/0:/dev/stdin \
+	-b /proc/self/fd/1:/dev/stdout \
+	-b /proc/self/fd/2:/dev/stderr \
+	-b $PREFIX/tmp:/dev/shm \
+	-b $PREFIX/tmp:/tmp \
+	-b $ROOTFS/proc/stat:/proc/stat \
+	-b $ROOTFS/proc/version:/proc/version \
+	-b /storage/emulated/0:/sdcard \
+	-b /data \
+	-b /system \
+	-b /:/host-rootfs \
+	/usr/bin/env -i \
+	TERM=xterm-256color \
+	HOME=/root \
+	USER=root \
+	PATH="$PATHBASE" \
+	TMPDIR=/tmp \
+	LANG=C.UTF-8 \
+	/bin/su -l $(cat $ROOTFS/etc/userinfo.rc) || true
+	:
+	exec stop-pulseaudio || true
+}
+
+launch-su() {
+	if [ -e $STATUS ]; then
+    		echo ""
+	else
+    		echo "Cannot start Debian Container. Please install it using debdroid --install"
+			exit 2
+	fi
+	unset LD_PRELOAD
+	start-pulseaudio
+	proot --link2symlink --kill-on-exit \
+	-0 -r $ROOTFS -p --sysvipc \
+	-b /dev \
+	-b /proc \
+	-b /sys \
+	-b /dev/urandom:/dev/random \
+	-b /proc/self/fd:/dev/fd \
+	-b /proc/self/fd/0:/dev/stdin \
+	-b /proc/self/fd/1:/dev/stdout \
+	-b /proc/self/fd/2:/dev/stderr \
+	-b $PREFIX/tmp:/dev/shm \
+	-b $PREFIX/tmp:/tmp \
+	-b $ROOTFS/proc/stat:/proc/stat \
+	-b $ROOTFS/proc/version:/proc/version \
+	-b /storage/emulated/0:/sdcard \
+	-b /data \
+	-b /system \
+	-b /:/host-rootfs \
+	/usr/bin/env -i \
+	TERM=xterm-256color \
+	HOME=/root \
+	USER=root \
+	PATH="$PATHBASE" \
+	TMPDIR=/tmp \
+	LANG=C.UTF-8 \
+	/bin/su -l || true
+	:
+	exec stop-pulseaudio || true
+}
+
+launch-isol() {
+	if [ -e $STATUS ]; then
+    		echo ""
+	else
+    		echo "Cannot start Debian Container. Please install it using debdroid --install"
+			exit 2
+	fi
+	unset LD_PRELOAD
+	start-pulseaudio
+	proot --link2symlink --kill-on-exit \
+	-0 -r $ROOTFS -p --sysvipc \
+	-b /dev \
+	-b /proc \
+	-b /sys \
+	-b /proc/self/fd:/dev/fd \
+	-b /proc/self/fd/0:/dev/stdin \
+	-b /proc/self/fd/1:/dev/stdout \
+	-b /proc/self/fd/2:/dev/stderr \
+	-b $PREFIX/tmp:/dev/shm \
+	-b $PREFIX/tmp:/tmp \
+	-b $ROOTFS/proc/stat:/proc/stat \
+	-b $ROOTFS/proc/version:/proc/version \
+	-w /root \
+	/usr/bin/env -i \
+	TERM=xterm-256color \
+	HOME=/root \
+	USER=root \
+	PATH="$PATHBASE" \
+	TMPDIR=/tmp \
+	LANG=C.UTF-8 \
+	/bin/su -l $(cat $ROOTFS/etc/userinfo.rc) || true
+	:
+	exec stop-pulseaudio || true
+}
+
+parse-cmd() {
+	if [ -e $STATUS ]; then
+    		echo ""
+	else
+    		echo "Cannot start Debian Container. Please install it using debdroid --install"
+			exit 2
+	fi
+	unset LD_PRELOAD
+	proot --link2symlink --kill-on-exit \
+	-0 -r $ROOTFS -p --sysvipc \
+	-b /dev \
+	-b /proc \
+	-b /sys \
+	-b /dev/urandom:/dev/random \
+	-b /proc/self/fd:/dev/fd \
+	-b /proc/self/fd/0:/dev/stdin \
+	-b /proc/self/fd/1:/dev/stdout \
+	-b /proc/self/fd/2:/dev/stderr \
+	-b $PREFIX/tmp:/dev/shm \
+	-b $PREFIX/tmp:/tmp \
+	-b $ROOTFS/proc/stat:/proc/stat \
+	-b $ROOTFS/proc/version:/proc/version \
+	-b /storage/emulated/0:/sdcard \
+	-b /data \
+	-b /system \
+	-b /:/host-rootfs \
+	/usr/bin/env -i \
+	TERM=xterm-256color \
+	HOME=/root \
+	USER=root \
+	PATH="$PATHBASE" \
+	TMPDIR=/tmp \
+	LANG=C.UTF-8 \
+	sudo -u $(cat $ROOTFS/etc/userinfo.rc) "$@"
+}
+
+parse-cmd-isol() {
+	if [ -e $STATUS ]; then
+    		echo ""
+	else
+    		echo "Cannot start Debian Container. Please install it using debdroid --install"
+			exit 2
+	fi
+	unset LD_PRELOAD
+	proot --link2symlink --kill-on-exit \
+	-0 -r $ROOTFS -p --sysvipc \
+	-b /dev \
+	-b /proc \
+	-b /sys \
+	-b /proc/self/fd:/dev/fd \
+	-b /proc/self/fd/0:/dev/stdin \
+	-b /proc/self/fd/1:/dev/stdout \
+	-b /proc/self/fd/2:/dev/stderr \
+	-b $PREFIX/tmp:/dev/shm \
+	-b $PREFIX/tmp:/tmp \
+	-b $ROOTFS/proc/stat:/proc/stat \
+	-b $ROOTFS/proc/version:/proc/version \
+	-w /root \
+	/usr/bin/env -i \
+	TERM=xterm-256color \
+	HOME=/root \
+	USER=root \
+	PATH="$PATHBASE" \
+	TMPDIR=/tmp \
+	LANG=C.UTF-8 \
+	sudo -u $(cat $ROOTFS/etc/userinfo.rc) "$@"
+}
+
+reinstall() {
+	if [ -e $STATUS ]; then
+    	echo ""
+	else
+    	echo "Cannot Reinstall Debian Container. Debian isn't installed"
+		exit 2
+	fi
+	uninstall || true
+	install-debian
+}
+
+if [ $# = 0 ]; then
+	show_help
+fi
+
+CMD="$1"
+shift 1
+
+case "$CMD" in
+	--install) install-debian;;
+	--uninstall)
+		uninstall
+		;;
+	--reinstall)
+		reinstall
+		;;
+	--launch)
+		launch
+		;;
+	--launch-su)
+		launch-su
+		;;
+	--isolated)
+		launch-isol
+		;;
+	--export)
+		exec $STATEFUL/lib/libbackup-rootfs.so
+		;;
+	--import)
+		exec $STATEFUL/lib/librestore-rootfs.so
+		;;
+	-h|--help|--show-help)
+		show_help
+		;;
+	--)
+		parse-cmd "$@"
+		;;
+	---)
+		parse-cmd-isol "$@"
+		;;
+	*) echo "Unknown Command: '$CMD'"; exit 2;;
+esac
